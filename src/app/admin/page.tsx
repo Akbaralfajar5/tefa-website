@@ -9,21 +9,36 @@ export default function AdminLoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-
-  // Sync cloud password to localStorage on page load
-  useEffect(() => {
-    fetchAdminPassword();
-  }, []);
   const [loading, setLoading] = useState(false);
+  const [cloudPassword, setCloudPassword] = useState<string | null>(null);
 
-  const handleLogin = (e: React.FormEvent) => {
+  // Fetch password from cloud on page load
+  useEffect(() => {
+    fetchAdminPassword().then((pw) => {
+      setCloudPassword(pw);
+    });
+  }, []);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    // Simple client-side auth
+    // Always fetch latest password from cloud before checking
+    let savedPassword = cloudPassword;
+    if (!savedPassword) {
+      try {
+        savedPassword = await fetchAdminPassword();
+      } catch {
+        // Fallback to localStorage
+        savedPassword = typeof window !== "undefined"
+          ? localStorage.getItem("tefa_admin_password") || "pmhp2026"
+          : "pmhp2026";
+      }
+    }
+
     setTimeout(() => {
-      if (username === "admin" && password === "pmhp2026") {
+      if (username === "admin" && password === savedPassword) {
         if (typeof window !== "undefined") {
           localStorage.setItem("tefa_admin_auth", "true");
           localStorage.setItem("tefa_admin_login_time", Date.now().toString());
