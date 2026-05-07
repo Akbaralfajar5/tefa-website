@@ -137,18 +137,58 @@ export function getSiteSettings(): SiteSettings {
   if (typeof window === "undefined") return defaultSettings;
   const stored = localStorage.getItem("tefa_site_settings");
   if (stored) {
-    try { return { ...defaultSettings, ...JSON.parse(stored) }; } catch { /* */ }
+    try {
+      const data = JSON.parse(stored);
+      return {
+        ...defaultSettings,
+        ...data,
+        hero: { ...defaultSettings.hero, ...(data.hero || {}) },
+        stats: data.stats || defaultSettings.stats,
+        about: { ...defaultSettings.about, ...(data.about || {}) },
+        aboutPage: {
+          ...defaultSettings.aboutPage,
+          ...(data.aboutPage || {}),
+          features: data.aboutPage?.features || defaultSettings.aboutPage.features,
+          tefaParagraphs: data.aboutPage?.tefaParagraphs || defaultSettings.aboutPage.tefaParagraphs,
+        },
+        school: { ...defaultSettings.school, ...(data.school || {}) },
+        visionMission: {
+          ...defaultSettings.visionMission,
+          ...(data.visionMission || {}),
+          missions: data.visionMission?.missions || defaultSettings.visionMission.missions,
+        },
+      };
+    } catch { /* */ }
   }
   return defaultSettings;
 }
 
 // Async version that fetches from cloud
 export async function fetchSiteSettings(): Promise<SiteSettings> {
-  const data = await fetchBlob<SiteSettings>("siteSettings", defaultSettings);
-  if (typeof window !== "undefined") {
+  const data = await fetchBlob<Partial<SiteSettings>>("siteSettings", {});
+  if (typeof window !== "undefined" && Object.keys(data).length > 0) {
     localStorage.setItem("tefa_site_settings", JSON.stringify(data));
   }
-  return { ...defaultSettings, ...data };
+  // Deep merge: spread top-level and nested objects
+  return {
+    ...defaultSettings,
+    ...data,
+    hero: { ...defaultSettings.hero, ...(data.hero || {}) },
+    stats: data.stats || defaultSettings.stats,
+    about: { ...defaultSettings.about, ...(data.about || {}) },
+    aboutPage: {
+      ...defaultSettings.aboutPage,
+      ...(data.aboutPage || {}),
+      features: data.aboutPage?.features || defaultSettings.aboutPage.features,
+      tefaParagraphs: data.aboutPage?.tefaParagraphs || defaultSettings.aboutPage.tefaParagraphs,
+    },
+    school: { ...defaultSettings.school, ...(data.school || {}) },
+    visionMission: {
+      ...defaultSettings.visionMission,
+      ...(data.visionMission || {}),
+      missions: data.visionMission?.missions || defaultSettings.visionMission.missions,
+    },
+  };
 }
 
 export async function saveSiteSettings(settings: SiteSettings): Promise<boolean> {
