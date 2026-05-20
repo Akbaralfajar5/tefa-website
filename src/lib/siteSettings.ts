@@ -200,16 +200,16 @@ export async function saveSiteSettings(settings: SiteSettings): Promise<boolean>
 
 // Admin password
 export function getAdminPassword(): string {
-  if (typeof window === "undefined") return "pmhp2026";
-  return localStorage.getItem("tefa_admin_password") || "pmhp2026";
+  if (typeof window === "undefined") return "";
+  return localStorage.getItem("tefa_admin_password") || "";
 }
 
 export async function fetchAdminPassword(): Promise<string> {
-  const data = await fetchBlob<{ password: string }>("password", { password: "pmhp2026" });
+  const data = await fetchBlob<{ password: string }>("password", { password: "" });
   if (typeof window !== "undefined" && data.password) {
     localStorage.setItem("tefa_admin_password", data.password);
   }
-  return data.password || "pmhp2026";
+  return data.password || "";
 }
 
 export async function saveAdminPassword(password: string): Promise<boolean> {
